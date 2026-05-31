@@ -9,12 +9,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface ComplaintRepo extends JpaRepository<Complaint,Long> {
     Page<Complaint> findAllByStudent(User student, Pageable pageable);
     Page<Complaint> findAllByComplaintStatus(ComplaintStatus complaintStatus,Pageable pageable);
     Page<Complaint> findAllByComplaintPriority(ComplaintPriority complaintPriority,Pageable pageable);
+    Long countByComplaintStatus(ComplaintStatus complaintStatus);
+    Long countByComplaintPriority(ComplaintPriority complaintPriority);
+    Page<Complaint> findAllByAssignedTo(User staff,Pageable pageable);
+    Page<Complaint> findAllByTitleContainingIgnoreCase(String title,Pageable pageable);
+    Long countByComplaintStatusAndAssignedTo(ComplaintStatus complaintStatus,User staff);
+    Long countByComplaintPriorityAndAssignedTo(ComplaintPriority complaintPriority,User staff);
+    Long countByAssignedTo(User staff);
 }

@@ -4,11 +4,12 @@ import com.example.smartcampus.smartcampus.dtos.*;
 import com.example.smartcampus.smartcampus.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users/")
@@ -35,5 +36,33 @@ public  class AuthController {
     @PostMapping("resetPassword")
     public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto){
         return ResponseEntity.ok(authService.resetPassword(resetPasswordRequestDto));
+    }
+    @PostMapping("admin/staff")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDto> createStaff(@Valid @RequestBody StaffCreationDto staffCreationDto){
+        return ResponseEntity.ok(authService.createStaff(staffCreationDto));
+    }
+    @PutMapping("{id}/block")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDto> blockUser(@PathVariable("id") Long userId,@Valid @RequestBody BlockUserDto blockUserDto){
+        return ResponseEntity.ok(authService.blockUser(userId,blockUserDto));
+    }
+    @GetMapping("admin/staff")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponseDto>> getAllStaff(@RequestParam(required = false,defaultValue ="0") int pageNo,
+                                                             @RequestParam(required = false,defaultValue = "5") int pageSize,
+                                                             @RequestParam(required = false,defaultValue = "id") String sortBy,
+                                                             @RequestParam(required = false,defaultValue = "ASC") String sortDir){
+        Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        return ResponseEntity.ok(authService.getAllStaff(PageRequest.of(pageNo,pageSize,sort)));
+    }
+    @GetMapping("admin/student")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponseDto>> getAllStudent(@RequestParam(required = false,defaultValue ="0") int pageNo,
+                                                             @RequestParam(required = false,defaultValue = "5") int pageSize,
+                                                             @RequestParam(required = false,defaultValue = "id") String sortBy,
+                                                             @RequestParam(required = false,defaultValue = "ASC") String sortDir){
+        Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        return ResponseEntity.ok(authService.getAllStudent(PageRequest.of(pageNo,pageSize,sort)));
     }
 }

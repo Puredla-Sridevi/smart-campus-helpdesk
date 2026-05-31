@@ -1,9 +1,6 @@
 package com.example.smartcampus.smartcampus.controller;
 
-import com.example.smartcampus.smartcampus.dtos.ComplaintRequestDto;
-import com.example.smartcampus.smartcampus.dtos.ComplaintResponseDto;
-import com.example.smartcampus.smartcampus.dtos.UpdateComplaintPriorityDto;
-import com.example.smartcampus.smartcampus.dtos.UpdateComplaintStatusDto;
+import com.example.smartcampus.smartcampus.dtos.*;
 import com.example.smartcampus.smartcampus.entity.ComplaintPriority;
 import com.example.smartcampus.smartcampus.entity.ComplaintStatus;
 import com.example.smartcampus.smartcampus.service.ComplaintService;
@@ -37,7 +34,7 @@ public class ComplaintController {
     public ResponseEntity<ComplaintResponseDto> getComplaintById(@PathVariable("id") Long id){
         return ResponseEntity.ok(complaintService.getComplaintById(id));
  }
- @PreAuthorize("hasRole('ADMIN')")
+ @PreAuthorize("hasRole('STAFF')")
   @PutMapping("/{id}/status")
   public ResponseEntity<ComplaintResponseDto> updateComplaintStatus(@PathVariable("id") Long id, @RequestBody UpdateComplaintStatusDto updateComplaintStatusDto){
         return ResponseEntity.ok(complaintService.updateComplaintStatus(id,updateComplaintStatusDto));
@@ -86,4 +83,61 @@ public class ComplaintController {
         Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         return ResponseEntity.ok(complaintService.getAllComplaintsByPriority(complaintPriority,PageRequest.of(pageNo,pageSize,sort)));
     }
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<DashBoardStatsResponseDto> getDashBoardStats(){
+        return ResponseEntity.ok(complaintService.getDashboardStats());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/assign")
+    public ResponseEntity<ComplaintResponseDto> assignComplaint(@PathVariable("id") Long complaintId,@Valid @RequestBody AssignComplaintDto assignComplaintDto){
+        return ResponseEntity.ok(complaintService.assignComplaint(complaintId,assignComplaintDto));
+    }
+    @PreAuthorize("hasRole('STAFF')")
+    @GetMapping("/assigned-to-me")
+    public ResponseEntity<Page<ComplaintResponseDto>> getAllComplaintsByAssignedTo(@RequestParam(required = false,defaultValue ="0") int pageNo,
+                                                                             @RequestParam(required = false,defaultValue = "5") int pageSize,
+                                                                             @RequestParam(required = false,defaultValue = "id") String sortBy,
+                                                                             @RequestParam(required = false,defaultValue = "ASC") String sortDir){
+        Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        return ResponseEntity.ok(complaintService.getAllComplaintsByAssignedTo(PageRequest.of(pageNo,pageSize,sort)));
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<ComplaintResponseDto>> searchComplaints(
+            @RequestParam String keyword,
+            @RequestParam(required = false,defaultValue ="0") int pageNo,
+            @RequestParam(required = false,defaultValue = "5") int pageSize,
+            @RequestParam(required = false,defaultValue = "id") String sortBy,
+            @RequestParam(required = false,defaultValue = "ASC") String sortDir
+    ){
+        Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+return ResponseEntity.ok(complaintService.searchComplaints(keyword,PageRequest.of(pageNo,pageSize,sort)));
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<ComplaintHistoryResponseDto>> getComplaintHistory(@PathVariable("id") Long complaintId,
+                                                                                 @RequestParam(required = false,defaultValue ="0") int pageNo,
+                                                                                 @RequestParam(required = false,defaultValue = "5") int pageSize,
+                                                                                 @RequestParam(required = false,defaultValue = "id") String sortBy,
+                                                                                 @RequestParam(required = false,defaultValue = "ASC") String sortDir)
+    {
+        Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+         return ResponseEntity.ok(complaintService.getComplaintHistory(complaintId,PageRequest.of(pageNo,pageSize,sort)));
+    }
+
+    @GetMapping("/staff/dashboard")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<StaffDashBoardDto> getStaffDashboard(){
+        return  ResponseEntity.ok(complaintService.getStaffDashboard());
+    }
+    @PreAuthorize("hasRole('STAFF')")
+    @GetMapping("/assigned-to-me/{id}")
+    public ResponseEntity<ComplaintResponseDto> getComplaintByAssignedTo(@PathVariable("id") Long complaintId){
+           return  ResponseEntity.ok(complaintService.getMyAssignedComplaint(complaintId));
+    }
+
 }
