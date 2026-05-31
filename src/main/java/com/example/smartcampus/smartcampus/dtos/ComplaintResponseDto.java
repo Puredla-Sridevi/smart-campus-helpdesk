@@ -22,4 +22,5 @@ public class ComplaintResponseDto {
     private ComplaintPriority complaintPriority;
     private LocalDateTime createdAt;
     private String studentName;
+    private String assignedStaffName;
 }

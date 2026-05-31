@@ -33,6 +33,9 @@ public class Complaint {
     @ManyToOne
     @JoinColumn(name = "student_id",nullable = false)
     private User student;
+    @ManyToOne
+    @JoinColumn(name = "staff_id")
+    private User assignedTo;
     @PrePersist
     public void createdAt(){
          this.createdAt=LocalDateTime.now();

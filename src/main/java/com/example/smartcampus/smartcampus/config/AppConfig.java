@@ -1,5 +1,6 @@
 package com.example.smartcampus.smartcampus.config;
 
+import com.example.smartcampus.smartcampus.entity.User;
 import com.example.smartcampus.smartcampus.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,12 @@ public class AppConfig {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                return  userRepo.findByEmail(username).orElseThrow(()->new UsernameNotFoundException("UserName not Found"));
+            User user= userRepo.findByEmail(username).orElseThrow(()->new UsernameNotFoundException("UserName not Found"));
+
+            if(user.isBlocked()){
+                throw new UsernameNotFoundException("User account is blocked");
+            }
+            return user;
             }
         };
     }

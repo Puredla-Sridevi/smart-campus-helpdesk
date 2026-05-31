@@ -10,6 +10,8 @@ import com.example.smartcampus.smartcampus.repo.UserRepo;
 import com.example.smartcampus.smartcampus.service.AuthService;
 import com.example.smartcampus.smartcampus.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,8 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -135,5 +135,76 @@ authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
         otpVerification.setUsed(true);
         otpVerificationRepo.save(otpVerification);
         return "Password Changed Successfully";
+    }
+
+    @Override
+    public UserResponseDto createStaff(StaffCreationDto staffCreationDto) {
+        if(userRepo.existsByEmail(staffCreationDto.getEmail())){
+            throw new RuntimeException("User Already Exists");
+        }
+        User user=User.builder()
+                .password(passwordEncoder.encode(staffCreationDto.getPassword()))
+                .email(staffCreationDto.getEmail())
+                .enabled(true)
+                .blocked(false)
+                .phoneNumber(staffCreationDto.getPhoneNumber())
+                .fullName(staffCreationDto.getFullName())
+                .role(Role.ROLE_STAFF)
+                .build();
+            User savedUser=userRepo.save(user);
+            return UserResponseDto.builder()
+                    .id(savedUser.getId())
+                    .email(savedUser.getEmail())
+                    .fullName(savedUser.getFullName())
+                    .role(savedUser.getRole())
+                    .blocked(savedUser.isBlocked())
+                    .build();
+    }
+
+    @Override
+    public UserResponseDto blockUser(Long id, BlockUserDto blockUserDto) {
+        User user=userRepo.findById(id).orElseThrow(()->new UsernameNotFoundException("User Not Exists"));
+        if(user.getRole().equals(Role.ROLE_ADMIN)){
+            throw new RuntimeException("Admin cant Block Admins");
+        }
+        user.setBlocked(blockUserDto.getBlocked());
+        User savedUser=userRepo.save(user);
+        return UserResponseDto.builder()
+                .id(savedUser.getId())
+                .email(savedUser.getEmail())
+                .fullName(savedUser.getFullName())
+                .role(savedUser.getRole())
+                .blocked(savedUser.isBlocked())
+                .build();
+
+    }
+
+    @Override
+    public Page<UserResponseDto> getAllStaff(Pageable pageable) {
+        Page<User> users=userRepo.findAllByRole(Role.ROLE_STAFF,pageable);
+        return users.map(user ->(
+
+            UserResponseDto.builder()
+                    .blocked(user.isBlocked())
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .role(user.getRole())
+                    .build()
+       ) );
+    }
+
+    @Override
+    public Page<UserResponseDto> getAllStudent(Pageable pageable) {
+        Page<User> users=userRepo.findAllByRole(Role.ROLE_STUDENT,pageable);
+        return users.map(user ->(
+                UserResponseDto.builder()
+                        .blocked(user.isBlocked())
+                        .id(user.getId())
+                        .email(user.getEmail())
+                        .fullName(user.getFullName())
+                        .role(user.getRole())
+                        .build()
+        ) );
     }
 }
