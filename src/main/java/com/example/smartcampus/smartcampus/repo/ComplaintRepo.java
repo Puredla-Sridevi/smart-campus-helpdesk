@@ -21,4 +21,8 @@ public interface ComplaintRepo extends JpaRepository<Complaint,Long> {
     Long countByComplaintStatusAndAssignedTo(ComplaintStatus complaintStatus,User staff);
     Long countByComplaintPriorityAndAssignedTo(ComplaintPriority complaintPriority,User staff);
     Long countByAssignedTo(User staff);
+    Long countByComplaintStatusAndStudent(ComplaintStatus complaintStatus,User student);
+    Long countByComplaintPriorityAndStudent(ComplaintPriority complaintPriority,User student);
+
+    Long countByStudent(User student);
 }

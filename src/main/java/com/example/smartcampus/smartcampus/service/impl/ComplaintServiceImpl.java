@@ -68,7 +68,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
         Complaint complaint=complaintRepo.findById(id).orElseThrow(()->new RuntimeException("no Complaint Exists with the id: "+id));
         User student=userRepo.findByEmail(authentication.getName()).orElseThrow(()->new UsernameNotFoundException("User Not Found"));
-        if(!student.getId().equals(complaint.getStudent().getId())){
+        if(!(student.getId().equals(complaint.getStudent().getId())||student.getRole()==Role.ROLE_ADMIN)){
             throw new RuntimeException("UnAuthorized access");
         }
         return ComplaintResponseDto.builder()
@@ -242,6 +242,14 @@ complaint.setComplaintPriority(updateComplaintPriorityDto.getComplaintPriority()
     @Override
     public Page<ComplaintHistoryResponseDto> getComplaintHistory(Long complaintId, Pageable pageable) {
         Complaint complaint=complaintRepo.findById(complaintId).orElseThrow(()-> new RuntimeException("no Complaint Exists With Id : "+complaintId));
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        User staff=userRepo.findByEmail(authentication.getName()).orElseThrow(()->new UsernameNotFoundException("User Not Exists"));
+        boolean isStudent=staff.getFullName().equalsIgnoreCase(complaint.getStudent().getFullName());
+        boolean isStaff=complaint.getAssignedTo()!=null && staff.getFullName().equalsIgnoreCase(complaint.getAssignedTo().getFullName());
+
+        if(!(isStudent || isStaff || staff.getRole()==Role.ROLE_ADMIN)){
+            throw new RuntimeException("Access Denied");
+        }
         Page<ComplaintHistory> complaintHistories=complaintHistoryRepo.findAllByComplaint(complaint,pageable);
       return  complaintHistories.map(
                 complaintHistory ->
@@ -264,6 +272,18 @@ complaint.setComplaintPriority(updateComplaintPriorityDto.getComplaintPriority()
                 .resolvedComplaints(complaintRepo.countByComplaintStatusAndAssignedTo(ComplaintStatus.RESOLVED,staff))
                 .highPriorityComplaints(complaintRepo.countByComplaintPriorityAndAssignedTo(ComplaintPriority.HIGH,staff))
                 .totalAssignedComplaints(complaintRepo.countByAssignedTo(staff))
+                .build();
+    }
+
+    @Override
+    public StudentDashBoardDto getStudentDashboard() {
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        User student=userRepo.findByEmail(authentication.getName()).orElseThrow(()->new UsernameNotFoundException("No User Exists"));
+        return StudentDashBoardDto.builder()
+                .inProgressComplaints(complaintRepo.countByComplaintStatusAndStudent(ComplaintStatus.IN_PROGRESS,student))
+                .openComplaints(complaintRepo.countByComplaintStatusAndStudent(ComplaintStatus.OPEN,student))
+                .resolvedComplaints(complaintRepo.countByComplaintStatusAndStudent(ComplaintStatus.RESOLVED,student))
+                .totalComplaints(complaintRepo.countByStudent(student))
                 .build();
     }
 
