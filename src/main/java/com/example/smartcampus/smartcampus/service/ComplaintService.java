@@ -21,5 +21,6 @@ public interface ComplaintService {
     Page<ComplaintResponseDto> searchComplaints(String keyword,Pageable pageable);
   Page<ComplaintHistoryResponseDto> getComplaintHistory(Long complaintId,Pageable pageable);
   StaffDashBoardDto getStaffDashboard();
+  StudentDashBoardDto getStudentDashboard();
     ComplaintResponseDto getMyAssignedComplaint(Long id);
 }

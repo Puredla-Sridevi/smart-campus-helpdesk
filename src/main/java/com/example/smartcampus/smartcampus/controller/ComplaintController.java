@@ -118,7 +118,7 @@ return ResponseEntity.ok(complaintService.searchComplaints(keyword,PageRequest.o
     }
 
     @GetMapping("/{id}/history")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','STAFF')")
     public ResponseEntity<Page<ComplaintHistoryResponseDto>> getComplaintHistory(@PathVariable("id") Long complaintId,
                                                                                  @RequestParam(required = false,defaultValue ="0") int pageNo,
                                                                                  @RequestParam(required = false,defaultValue = "5") int pageSize,
@@ -133,6 +133,12 @@ return ResponseEntity.ok(complaintService.searchComplaints(keyword,PageRequest.o
     @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<StaffDashBoardDto> getStaffDashboard(){
         return  ResponseEntity.ok(complaintService.getStaffDashboard());
+    }
+
+    @GetMapping("/student/dashboard")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<StudentDashBoardDto> getStudentDashboard(){
+        return  ResponseEntity.ok(complaintService.getStudentDashboard());
     }
     @PreAuthorize("hasRole('STAFF')")
     @GetMapping("/assigned-to-me/{id}")
