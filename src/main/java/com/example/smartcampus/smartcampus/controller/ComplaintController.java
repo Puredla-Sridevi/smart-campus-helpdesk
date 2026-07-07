@@ -145,5 +145,20 @@ return ResponseEntity.ok(complaintService.searchComplaints(keyword,PageRequest.o
     public ResponseEntity<ComplaintResponseDto> getComplaintByAssignedTo(@PathVariable("id") Long complaintId){
            return  ResponseEntity.ok(complaintService.getMyAssignedComplaint(complaintId));
     }
-
+@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ComplaintResponseDto>>  filterComplaints(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) ComplaintStatus status,
+            @RequestParam(required = false) ComplaintPriority  priority,
+            @RequestParam(required = false,defaultValue = "0") int pageNo,
+            @RequestParam(required = false,defaultValue = "5") int pageSize,
+            @RequestParam(required = false,defaultValue = "id") String sortBy,
+            @RequestParam(required = false,defaultValue = "ASC") String sortDir
+){
+        Sort sort=sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        return ResponseEntity.ok(complaintService.filterComplaints(keyword,status,priority,PageRequest.of(pageNo,pageSize,sort)));
+}
 }

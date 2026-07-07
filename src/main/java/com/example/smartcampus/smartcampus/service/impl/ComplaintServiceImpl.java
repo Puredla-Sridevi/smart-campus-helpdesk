@@ -6,9 +6,14 @@ import com.example.smartcampus.smartcampus.repo.ComplaintHistoryRepo;
 import com.example.smartcampus.smartcampus.repo.ComplaintRepo;
 import com.example.smartcampus.smartcampus.repo.UserRepo;
 import com.example.smartcampus.smartcampus.service.ComplaintService;
+import com.example.smartcampus.smartcampus.service.EmailService;
+import com.example.smartcampus.smartcampus.specification.ComplaintSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,7 +25,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final ComplaintRepo complaintRepo;
     private final UserRepo userRepo;
     private final ComplaintHistoryRepo complaintHistoryRepo;
-
+private final EmailService emailService;
     @Override
     public ComplaintResponseDto createComplaint(ComplaintRequestDto complaintRequestDto) {
         Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
@@ -195,6 +200,7 @@ complaint.setComplaintPriority(updateComplaintPriorityDto.getComplaintPriority()
         }
         complaint.setAssignedTo(staff);
         Complaint savedComplaint=complaintRepo.save(complaint);
+        emailService.sendComplaintAssignNotify(complaint,staff.getEmail());
         saveHistory(savedComplaint,"complaint Assigned to "+savedComplaint.getAssignedTo().getFullName());
         return ComplaintResponseDto.builder()
                 .assignedStaffName(savedComplaint.getAssignedTo().getFullName())
@@ -305,6 +311,32 @@ complaint.setComplaintPriority(updateComplaintPriorityDto.getComplaintPriority()
                 .studentName(complaint.getStudent().getFullName())
                 .assignedStaffName(complaint.getAssignedTo() !=null ? complaint.getAssignedTo().getFullName() : null)
                 .build();
+    }
+
+    @Override
+    public Page<ComplaintResponseDto> filterComplaints(String keyword, ComplaintStatus status, ComplaintPriority priority,Pageable pageable) {
+        Specification<Complaint> specification=Specification.allOf();
+        if(keyword != null && !keyword.trim().isEmpty()){
+           specification= specification.and(ComplaintSpecification.haskeyword(keyword));
+        }
+        if(status!=null){
+           specification= specification.and(ComplaintSpecification.hasStatus(status));
+        }
+        if(priority!=null){
+           specification= specification.and(ComplaintSpecification.hasPriority(priority));
+        }
+       Page<Complaint> complaints=complaintRepo.findAll(specification,pageable);
+       return complaints.map(complaint ->
+                ComplaintResponseDto.builder()
+                        .id(complaint.getId())
+                .title(complaint.getTitle())
+                .description(complaint.getDescription())
+                .complaintPriority(complaint.getComplaintPriority())
+                .complaintStatus(complaint.getComplaintStatus())
+                .createdAt(complaint.getCreatedAt())
+                .studentName(complaint.getStudent().getFullName())
+                .assignedStaffName(complaint.getAssignedTo() !=null ? complaint.getAssignedTo().getFullName() : null)
+                .build());
     }
 
     private void saveHistory(Complaint complaint,String action){

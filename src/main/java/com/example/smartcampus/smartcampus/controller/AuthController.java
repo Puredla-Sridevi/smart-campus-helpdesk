@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users/")
 @RequiredArgsConstructor
@@ -55,6 +57,11 @@ public  class AuthController {
                                                              @RequestParam(required = false,defaultValue = "ASC") String sortDir){
         Sort sort=sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         return ResponseEntity.ok(authService.getAllStaff(PageRequest.of(pageNo,pageSize,sort)));
+    }
+    @GetMapping("admin/staff/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponseDto>> getAllStaff(){
+        return ResponseEntity.ok(authService.getAllStaff());
     }
     @GetMapping("admin/student")
     @PreAuthorize("hasRole('ADMIN')")

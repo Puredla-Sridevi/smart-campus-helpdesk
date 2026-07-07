@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -63,10 +65,6 @@ private String generateOtp(){
 }
     @Override
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
-authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-        loginRequestDto.getEmail(),
-        loginRequestDto.getPassword()
-));
         User user=userRepo.findByEmail(loginRequestDto.getEmail()).orElseThrow(()->new UsernameNotFoundException("User Not Found"));
         if(!user.isEnabled()){
             throw new RuntimeException("Account not verified");
@@ -74,7 +72,10 @@ authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
         if(user.isBlocked()){
             throw new RuntimeException("User is Blocked");
         }
-
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginRequestDto.getEmail(),
+                loginRequestDto.getPassword()
+        ));
        String token= jwtService.generateToken(user);
         return AuthResponseDto.builder()
                 .email(user.getEmail())
@@ -194,6 +195,7 @@ authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
        ) );
     }
 
+
     @Override
     public Page<UserResponseDto> getAllStudent(Pageable pageable) {
         Page<User> users=userRepo.findAllByRole(Role.ROLE_STUDENT,pageable);
@@ -206,5 +208,21 @@ authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                         .role(user.getRole())
                         .build()
         ) );
+    }
+
+    @Override
+    public List<UserResponseDto> getAllStaff() {
+        List<User> users=userRepo.findAllByRole(Role.ROLE_STAFF);
+        List<UserResponseDto> userResponseDtos=new ArrayList<>();
+        for(User user:users){
+           userResponseDtos.add( UserResponseDto.builder()
+                    .blocked(user.isBlocked())
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .role(user.getRole())
+                    .build());
+        }
+        return userResponseDtos;
     }
 }
