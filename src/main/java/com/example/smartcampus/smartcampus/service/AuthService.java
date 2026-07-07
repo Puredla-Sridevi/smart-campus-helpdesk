@@ -1,8 +1,11 @@
 package com.example.smartcampus.smartcampus.service;
 
 import com.example.smartcampus.smartcampus.dtos.*;
+import com.example.smartcampus.smartcampus.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface AuthService {
  String registration(RegisterRequestDto registerRequestDto);
@@ -14,4 +17,5 @@ String  otpVerification(OtpVerificationRequestDto verificationRequestDto);
     UserResponseDto blockUser(Long id,BlockUserDto blockUserDto);
     Page<UserResponseDto> getAllStaff(Pageable pageable);
     Page<UserResponseDto> getAllStudent(Pageable pageable);
+    List<UserResponseDto> getAllStaff();
 }

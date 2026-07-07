@@ -32,7 +32,6 @@ public class OtpVerification {
     }
     @PreUpdate
     public void updateAt(){
-
         this.expiryTime=LocalDateTime.now().plusMinutes(5);
     }
 }

@@ -1,10 +1,12 @@
 package com.example.smartcampus.smartcampus.service;
 
 import com.example.smartcampus.smartcampus.dtos.*;
+import com.example.smartcampus.smartcampus.entity.Complaint;
 import com.example.smartcampus.smartcampus.entity.ComplaintPriority;
 import com.example.smartcampus.smartcampus.entity.ComplaintStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 public interface ComplaintService {
     ComplaintResponseDto createComplaint(ComplaintRequestDto complaintRequestDto);
@@ -23,4 +25,5 @@ public interface ComplaintService {
   StaffDashBoardDto getStaffDashboard();
   StudentDashBoardDto getStudentDashboard();
     ComplaintResponseDto getMyAssignedComplaint(Long id);
+    Page<ComplaintResponseDto> filterComplaints(String keyword,ComplaintStatus status,ComplaintPriority priority,Pageable pageable);
 }

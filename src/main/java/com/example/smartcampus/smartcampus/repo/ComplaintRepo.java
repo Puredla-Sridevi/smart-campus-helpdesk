@@ -6,11 +6,13 @@ import com.example.smartcampus.smartcampus.entity.ComplaintStatus;
 import com.example.smartcampus.smartcampus.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ComplaintRepo extends JpaRepository<Complaint,Long> {
+public interface ComplaintRepo extends JpaRepository<Complaint,Long>, JpaSpecificationExecutor<Complaint> {
     Page<Complaint> findAllByStudent(User student, Pageable pageable);
     Page<Complaint> findAllByComplaintStatus(ComplaintStatus complaintStatus,Pageable pageable);
     Page<Complaint> findAllByComplaintPriority(ComplaintPriority complaintPriority,Pageable pageable);
@@ -23,6 +25,5 @@ public interface ComplaintRepo extends JpaRepository<Complaint,Long> {
     Long countByAssignedTo(User staff);
     Long countByComplaintStatusAndStudent(ComplaintStatus complaintStatus,User student);
     Long countByComplaintPriorityAndStudent(ComplaintPriority complaintPriority,User student);
-
     Long countByStudent(User student);
 }
